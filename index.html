@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>練習カードアプリ</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+
+body{
+  margin:0;
+  font-family:"Arial",sans-serif;
+  background:radial-gradient(circle at top,#3b1b78,#12051f 60%,#06020c);
+  color:#fff;
+  overflow-x:hidden;
+}
+
+button,input{
+  font-family:inherit;
+}
+
+.app{
+  min-height:100vh;
+  padding:16px;
+  padding-bottom:40px;
+}
+
+.header{
+  background:linear-gradient(135deg,#ffcc33,#ff5fd2,#7c5cff);
+  border:3px solid rgba(255,255,255,.7);
+  border-radius:24px;
+  padding:16px;
+  box-shadow:0 0 24px rgba(255,100,255,.45);
+}
+
+.profile{
+  display:flex;
+  gap:14px;
+  align-items:center;
+}
+
+.avatar{
+  width:72px;
+  height:72px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#fff,#ffe36e);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:38px;
+  border:4px solid #fff;
+}
+
+.nameInput{
+  width:100%;
+  padding:8px 10px;
+  border-radius:12px;
+  border:0;
+  font-size:18px;
+  font-weight:bold;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:12px;
+}
+
+.stat{
+  background:rgba(0,0,0,.35);
+  border-radius:14px;
+  padding:10px;
+  text-align:center;
+  font-weight:bold;
+}
+
+.tabs{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  margin:16px 0;
+  padding-bottom:4px;
+}
+
+.tab{
+  flex:0 0 auto;
+  border:0;
+  border-radius:999px;
+  padding:10px 14px;
+  font-weight:bold;
+  color:#fff;
+  background:rgba(255,255,255,.18);
+  border:1px solid rgba(255,255,255,.4);
+}
+
+.tab.active{
+  background:linear-gradient(135deg,#ffd84d,#ff5fd2);
+  color:#230018;
+}
+
+.cardGrid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+}
+
+.practiceCard{
+  position:relative;
+  border-radius:22px;
+  padding:16px;
+  background:linear-gradient(145deg,rgba(255,255,255,.18),rgba(255,255,255,.06));
+  border:2px solid rgba(255,255,255,.45);
+  box-shadow:0 10px 24px rgba(0,0,0,.35),0 0 18px rgba(255,255,255,.14);
+  overflow:hidden;
+  animation:floaty 3.2s ease-in-out infinite;
+}
+
+.practiceCard:nth-child(2n){
+  animation-delay:.5s;
+}
+
+@keyframes floaty{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-6px)}
+}
+
+.practiceCard::before{
+  content:"";
+  position:absolute;
+  inset:-40%;
+  background:conic-gradient(from 0deg,transparent,#fff6,transparent,#ff7cff66,transparent);
+  animation:spin 5s linear infinite;
+  opacity:.22;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+
+.cardInner{
+  position:relative;
+  z-index:1;
+}
+
+.category{
+  font-size:12px;
+  opacity:.8;
+  font-weight:bold;
+}
+
+.cardTitle{
+  font-size:24px;
+  font-weight:900;
+  margin:4px 0 10px;
+}
+
+.progressText{
+  font-weight:bold;
+  margin-bottom:6px;
+}
+
+.bar{
+  height:18px;
+  background:rgba(0,0,0,.35);
+  border-radius:999px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.4);
+}
+
+.barFill{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#64ff8f,#ffe45c,#ff73df);
+  transition:.25s;
+}
+
+.controls{
+  display:flex;
+  gap:8px;
+  margin-top:12px;
+}
+
+.pointInput{
+  width:100%;
+  padding:12px;
+  border:0;
+  border-radius:12px;
+  font-size:18px;
+  font-weight:bold;
+}
+
+.addBtn,.clearBtn,.smallBtn{
+  border:0;
+  border-radius:12px;
+  padding:12px 14px;
+  font-weight:900;
+  color:#fff;
+}
+
+.addBtn{
+  background:linear-gradient(135deg,#29d6ff,#7c5cff);
+}
+
+.clearBtn{
+  background:linear-gradient(135deg,#ffb300,#ff367d);
+}
+
+.smallBtn{
+  background:rgba(255,255,255,.18);
+  border:1px solid rgba(255,255,255,.4);
+}
+
+.history{
+  margin-top:10px;
+  font-size:13px;
+  color:#f5eaff;
+  max-height:76px;
+  overflow:auto;
+}
+
+.boxBtn{
+  width:100%;
+  margin:14px 0;
+  padding:14px;
+  border:0;
+  border-radius:18px;
+  font-size:16px;
+  font-weight:900;
+  color:#2a0036;
+  background:linear-gradient(135deg,#fff,#ffe45c);
+}
+
+.overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.72);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:99;
+  padding:16px;
+}
+
+.modal{
+  width:100%;
+  max-width:420px;
+  max-height:82vh;
+  overflow:auto;
+  border-radius:24px;
+  background:linear-gradient(145deg,#2d105f,#140722);
+  border:2px solid rgba(255,255,255,.5);
+  padding:18px;
+  box-shadow:0 0 30px rgba(255,100,255,.5);
+}
+
+.modal h2{
+  margin-top:0;
+}
+
+.clearItem{
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:14px;
+  padding:10px;
+  margin-bottom:8px;
+}
+
+.toast{
+  position:fixed;
+  left:50%;
+  top:45%;
+  transform:translate(-50%,-50%) scale(.8);
+  background:linear-gradient(135deg,#fff06a,#ff55d8);
+  color:#30002f;
+  padding:24px 28px;
+  border-radius:26px;
+  font-size:26px;
+  font-weight:900;
+  box-shadow:0 0 34px rgba(255,255,255,.65);
+  z-index:120;
+  opacity:0;
+  pointer-events:none;
+  transition:.25s;
+  text-align:center;
+}
+
+.toast.show{
+  opacity:1;
+  transform:translate(-50%,-50%) scale(1);
+}
+
+.sparkle{
+  position:fixed;
+  width:6px;
+  height:6px;
+  background:#fff;
+  border-radius:50%;
+  opacity:.7;
+  animation:spark 3s linear infinite;
+}
+
+@keyframes spark{
+  from{transform:translateY(0);opacity:.8}
+  to{transform:translateY(-120vh);opacity:0}
+}
+
+@media(min-width:700px){
+  .cardGrid{
+    grid-template-columns:1fr 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="profile">
+      <div class="avatar" id="avatar">🕺</div>
+      <div style="flex:1">
+        <input id="playerName" class="nameInput" placeholder="名前を入力">
+        <div class="stats">
+          <div class="stat">💎 <span id="diamondCount">0</span></div>
+          <div class="stat">カード <span id="cardCount">0</span></div>
+          <div class="stat">挑戦中 <span id="activeCount">0</span></div>
+          <div class="stat">クリア <span id="clearCount">0</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="boxBtn" onclick="openClearBox()">🏆 クリア済みボックスを見る</button>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="cardGrid" id="cardGrid"></div>
+
+</div>
+
+<div class="overlay" id="clearOverlay">
+  <div class="modal">
+    <h2>🏆 クリア済みボックス</h2>
+    <div id="clearList"></div>
+    <button class="boxBtn" onclick="closeClearBox()">閉じる</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+const SAVE_KEY = 'kids_practice_card_app_v1';
+
+const CARD_MASTER = [
+  {id:'windmill', category:'パワームーブ', name:'ウィンドミル'},
+  {id:'swipes', category:'パワームーブ', name:'スワイプス'},
+  {id:'thomas', category:'パワームーブ', name:'トーマス'},
+  {id:'atracks', category:'パワームーブ', name:'Aトラックス'},
+  {id:'airtracks', category:'パワームーブ', name:'エアートラックス'},
+
+  {id:'chair', category:'フリーズ', name:'チェアー'},
+  {id:'elbow', category:'フリーズ', name:'肘倒立'},
+  {id:'headstand3', category:'フリーズ', name:'3点倒立'},
+  {id:'handstand', category:'フリーズ', name:'倒立'},
+  {id:'max', category:'フリーズ', name:'マックス'},
+  {id:'airbaby', category:'フリーズ', name:'エアベイビー'},
+
+  {id:'stretch1', category:'ストレッチ', name:'自主練習 1'},
+  {id:'stretch2', category:'ストレッチ', name:'自主練習 2'},
+  {id:'stretch3', category:'ストレッチ', name:'自主練習 3'},
+  {id:'stretch4', category:'ストレッチ', name:'自主練習 4'},
+
+  {id:'muscle1', category:'筋トレ', name:'自主練習 1'},
+  {id:'muscle2', category:'筋トレ', name:'自主練習 2'},
+  {id:'muscle3', category:'筋トレ', name:'自主練習 3'},
+  {id:'muscle4', category:'筋トレ', name:'自主練習 4'},
+
+  {id:'idea1', category:'ネタ作り', name:'自主練習 1'},
+  {id:'idea2', category:'ネタ作り', name:'自主練習 2'},
+  {id:'idea3', category:'ネタ作り', name:'自主練習 3'},
+  {id:'idea4', category:'ネタ作り', name:'自主練習 4'},
+
+  {id:'study1', category:'知識', name:'自主練習 1'},
+  {id:'study2', category:'知識', name:'自主練習 2'},
+  {id:'study3', category:'知識', name:'自主練習 3'},
+  {id:'study4', category:'知識', name:'自主練習 4'},
+
+  {id:'diary1', category:'日記', name:'自主練習 1'},
+  {id:'diary2', category:'日記', name:'自主練習 2'},
+  {id:'diary3', category:'日記', name:'自主練習 3'}
+];
+
+const categories = ['すべて', ...new Set(CARD_MASTER.map(c => c.category))];
+
+let state = loadState();
+let currentCategory = 'すべて';
+
+function defaultState(){
+  const cards = {};
+  CARD_MASTER.forEach(card=>{
+    cards[card.id] = {
+      point:0,
+      history:[]
+    };
+  });
+  return {
+    name:'',
+    avatar:'🕺',
+    diamonds:0,
+    cards,
+    clears:[]
+  };
+}
+
+function loadState(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
+    const base = defaultState();
+    if(!saved) return base;
+
+    CARD_MASTER.forEach(card=>{
+      if(!saved.cards) saved.cards = {};
+      if(!saved.cards[card.id]){
+        saved.cards[card.id] = {point:0,history:[]};
+      }
+    });
+
+    return Object.assign(base, saved);
+  }catch(e){
+    return defaultState();
+  }
+}
+
+function saveState(){
+  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+}
+
+function todayText(){
+  const d = new Date();
+  return `${d.getMonth()+1}月${d.getDate()}日`;
+}
+
+function render(){
+  document.getElementById('playerName').value = state.name || '';
+  document.getElementById('avatar').textContent = state.avatar || '🕺';
+  document.getElementById('diamondCount').textContent = state.diamonds;
+  document.getElementById('cardCount').textContent = CARD_MASTER.length;
+  document.getElementById('clearCount').textContent = state.clears.length;
+
+  const active = CARD_MASTER.filter(card => state.cards[card.id].point > 0).length;
+  document.getElementById('activeCount').textContent = active;
+
+  renderTabs();
+  renderCards();
+}
+
+function renderTabs(){
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = '';
+
+  categories.forEach(cat=>{
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (cat === currentCategory ? ' active' : '');
+    btn.textContent = cat;
+    btn.onclick = ()=>{
+      currentCategory = cat;
+      render();
+    };
+    tabs.appendChild(btn);
+  });
+}
+
+function renderCards(){
+  const grid = document.getElementById('cardGrid');
+  grid.innerHTML = '';
+
+  const list = CARD_MASTER.filter(card=>{
+    return currentCategory === 'すべて' || card.category === currentCategory;
+  });
+
+  list.forEach(card=>{
+    const data = state.cards[card.id];
+    const percent = Math.min(100, data.point);
+    const div = document.createElement('div');
+    div.className = 'practiceCard';
+
+    div.innerHTML = `
+      <div class="cardInner">
+        <div class="category">${card.category}</div>
+        <div class="cardTitle">${card.name}</div>
+        <div class="progressText">${data.point} / 100 ポイント</div>
+        <div class="bar"><div class="barFill" style="width:${percent}%"></div></div>
+
+        <div class="controls">
+          <input class="pointInput" id="input_${card.id}" type="number" min="1" max="100" placeholder="今日のpt">
+          <button class="addBtn" onclick="addPoint('${card.id}')">追加</button>
+        </div>
+
+        <div class="controls">
+          <button class="smallBtn" onclick="quickAdd('${card.id}',10)">+10</button>
+          <button class="smallBtn" onclick="quickAdd('${card.id}',20)">+20</button>
+          <button class="smallBtn" onclick="quickAdd('${card.id}',50)">+50</button>
+          <button class="clearBtn" onclick="manualClear('${card.id}')">達成</button>
+        </div>
+
+        <div class="history">
+          ${renderHistory(data.history)}
+        </div>
+      </div>
+    `;
+
+    grid.appendChild(div);
+  });
+}
+
+function renderHistory(history){
+  if(!history || history.length === 0) return 'まだ記録なし';
+  return history.slice().reverse().map(h=>{
+    return `${h.date}　${h.point}pt`;
+  }).join('<br>');
+}
+
+function addPoint(cardId){
+  const input = document.getElementById('input_' + cardId);
+  const value = Number(input.value || 0);
+  if(value <= 0){
+    showToast('ポイントを入れてね');
+    return;
+  }
+
+  applyPoint(cardId, value);
+}
+
+function quickAdd(cardId, value){
+  applyPoint(cardId, value);
+}
+
+function applyPoint(cardId, value){
+  const card = CARD_MASTER.find(c => c.id === cardId);
+  const data = state.cards[cardId];
+
+  data.point += value;
+  data.history.push({
+    date:todayText(),
+    point:value
+  });
+
+  if(data.point >= 100){
+    completeCard(cardId);
+  }else{
+    showToast(`+${value}pt`);
+  }
+
+  saveState();
+  render();
+}
+
+function manualClear(cardId){
+  const data = state.cards[cardId];
+  if(data.point <= 0){
+    showToast('まだポイントがありません');
+    return;
+  }
+
+  completeCard(cardId);
+  saveState();
+  render();
+}
+
+function completeCard(cardId){
+  const card = CARD_MASTER.find(c => c.id === cardId);
+  const data = state.cards[cardId];
+
+  state.diamonds += 1;
+
+  state.clears.unshift({
+    cardId:cardId,
+    name:card.name,
+    category:card.category,
+    date:todayText(),
+    total:data.point,
+    history:[...data.history]
+  });
+
+  data.point = 0;
+  data.history = [];
+
+  showToast('CLEAR!!<br>💎 +1');
+}
+
+function openClearBox(){
+  const list = document.getElementById('clearList');
+
+  if(state.clears.length === 0){
+    list.innerHTML = '<p>まだクリア済みカードはありません。</p>';
+  }else{
+    list.innerHTML = state.clears.map(clear=>{
+      return `
+        <div class="clearItem">
+          <strong>${clear.name}</strong><br>
+          ${clear.category}<br>
+          ${clear.date} 達成 / ${clear.total}pt<br>
+          💎 ダイヤ獲得
+        </div>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('clearOverlay').style.display = 'flex';
+}
+
+function closeClearBox(){
+  document.getElementById('clearOverlay').style.display = 'none';
+}
+
+function showToast(text){
+  const toast = document.getElementById('toast');
+  toast.innerHTML = text;
+  toast.classList.add('show');
+
+  setTimeout(()=>{
+    toast.classList.remove('show');
+  },1200);
+}
+
+document.getElementById('playerName').addEventListener('input', e=>{
+  state.name = e.target.value;
+  saveState();
+});
+
+function makeSparkles(){
+  for(let i=0;i<28;i++){
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    s.style.left = Math.random() * 100 + 'vw';
+    s.style.bottom = '-20px';
+    s.style.animationDelay = Math.random() * 3 + 's';
+    s.style.animationDuration = 2 + Math.random() * 3 + 's';
+    document.body.appendChild(s);
+  }
+}
+
+makeSparkles();
+render();
+</script>
+</body>
+</html>
