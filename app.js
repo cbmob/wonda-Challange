@@ -1,6 +1,7 @@
 'use strict';
 
-const SAVE_KEY = 'wanda_time_room_v1';
+const SAVE_KEY = 'wanda_time_room_v2';
+const ADMIN_PASS = '0321';
 
 const PRACTICE_CARDS = [
   ['チェアーコンボ', ['バリエーション', 'キレ', '3点へ', '肘へ']],
@@ -27,26 +28,67 @@ const PRACTICE_CARDS = [
 ];
 
 const MISSION_CARDS = [
-  'ウィンドミル5周', '高速ウィンドミル5周', 'スワイプス5周', '高速スワイプス5周',
-  'トーマス5周', 'トーマス7周', 'トーマス10周', 'ドリル',
-  'Aトラックス', 'Aトラックス2周', 'ショルダースピン3周',
-  'ラビット10回', 'ラビット30回', 'エルボーラビット10回', 'エルボーラビット30回',
-  'エルボー入れ替えラビット10回', 'マックス→ハロー→マックス',
-  '肘上げ→マックス', '3点→エルボー→入れ替え',
-  'エルボーエアー2発', 'エルボーエアー3発', 'エアー2発', 'エアー3発',
-  'バックスピン→チェアー', 'ウィンドミル→トーマス', 'トーマス→ウィンドミル',
-  'スワイプス→トーマス', 'トーマス→スワイプス',
-  'シフト10回', 'ダブルシフト2回', '跳ね起き', 'マカコ', 'ロンダート', 'バタフライ'
+  'ウィンドミル5周',
+  '高速ウィンドミル5周',
+  'スワイプス5周',
+  '高速スワイプス5周',
+  'トーマス5周',
+  'トーマス7周',
+  'トーマス10周',
+  'ドリル',
+  'Aトラックス',
+  'Aトラックス2周',
+  'ショルダースピン3周',
+  'ラビット10回',
+  'ラビット30回',
+  'エルボーラビット10回',
+  'エルボーラビット30回',
+  'エルボー入れ替えラビット10回',
+  'マックス→ハロー→マックス',
+  '肘上げ→マックス',
+  '3点→エルボー→入れ替え',
+  'エルボーエアー2発',
+  'エルボーエアー3発',
+  'エアー2発',
+  'エアー3発',
+  'バックスピン→チェアー',
+  'ウィンドミル→トーマス',
+  'トーマス→ウィンドミル',
+  'スワイプス→トーマス',
+  'トーマス→スワイプス',
+  'シフト10回',
+  'ダブルシフト2回',
+  '跳ね起き',
+  'マカコ',
+  'ロンダート',
+  'バタフライ'
 ].map((name, i) => ({
   id: 'm' + i,
   name,
-  diamond: 3 + Math.floor(i / 5)
+  diamond: 1
 }));
 
 const GACHA_CARDS = [
-  'ワンダ', '時のカギ', '肉球スタンプ', '練習の妖精', 'チェアーマスター',
-  'ウィンドミルスター', 'トーマスドラゴン', 'ラビットキャット', 'エアーウィング',
-  '努力の時計', '秘密のファイル', 'ダイヤの部屋'
+  'ワンダ',
+  '時のカギ',
+  '肉球スタンプ',
+  '練習の妖精',
+  'チェアーマスター',
+  'ウィンドミルスター',
+  'トーマスドラゴン',
+  'ラビットキャット',
+  'エアーウィング',
+  '努力の時計',
+  '秘密のファイル',
+  'ダイヤの部屋',
+  'ハローバックムーン',
+  'マックスブレイブ',
+  'ドリルスパーク',
+  'スワイプスフェニックス',
+  'ショルダーコメット',
+  '倒立クロック',
+  'エルボーライト',
+  'アクロバットスター'
 ];
 
 let state = load();
@@ -63,10 +105,28 @@ function defaultState() {
   };
 }
 
+function normalizeState(raw) {
+  const base = defaultState();
+  const merged = Object.assign(base, raw || {});
+
+  if (!Array.isArray(merged.collection)) merged.collection = [];
+  if (!Array.isArray(merged.shelf)) merged.shelf = Array(9).fill(null);
+
+  merged.shelf = merged.shelf.slice(0, 9);
+  while (merged.shelf.length < 9) merged.shelf.push(null);
+
+  if (!merged.practice || typeof merged.practice !== 'object') merged.practice = {};
+  if (!merged.cleared || typeof merged.cleared !== 'object') merged.cleared = {};
+  if (typeof merged.diamond !== 'number') merged.diamond = 20;
+  if (!merged.name) merged.name = 'なまえ未設定';
+
+  return merged;
+}
+
 function load() {
   try {
-    return { ...defaultState(), ...JSON.parse(localStorage.getItem(SAVE_KEY)) };
-  } catch {
+    return normalizeState(JSON.parse(localStorage.getItem(SAVE_KEY)));
+  } catch (e) {
     return defaultState();
   }
 }
@@ -76,72 +136,116 @@ function save() {
   renderHeader();
 }
 
+function resetSave() {
+  localStorage.removeItem(SAVE_KEY);
+  state = defaultState();
+  filePage = 0;
+  renderAll();
+  show('main');
+}
+
 function today() {
   return new Date().toLocaleDateString('ja-JP');
 }
 
-function show(screen) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(screen + 'Screen').classList.add('active');
+function renderHeader() {
+  const diamond = document.getElementById('diamondCount');
+  if (diamond) diamond.textContent = state.diamond;
+}
 
+function renderAll() {
+  renderHeader();
+  renderMain();
+  renderPractice();
+  renderMission();
+  renderFile();
+  renderPhone();
+  renderAdmin();
+}
+
+function show(screen) {
+  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+
+  const target = document.getElementById(screen + 'Screen');
+  if (target) target.classList.add('active');
+
+  if (screen === 'main') renderMain();
   if (screen === 'practice') renderPractice();
   if (screen === 'mission') renderMission();
   if (screen === 'phone') renderPhone();
   if (screen === 'file') renderFile();
   if (screen === 'gacha') renderGacha();
+  if (screen === 'admin') renderAdmin();
 }
 
 function modal(text, actions) {
-  document.getElementById('modalText').textContent = text;
-  const area = document.getElementById('modalActions');
-  area.innerHTML = '';
+  const modalEl = document.getElementById('modal');
+  const modalText = document.getElementById('modalText');
+  const modalActions = document.getElementById('modalActions');
 
-  actions.forEach(a => {
+  modalText.textContent = text;
+  modalActions.innerHTML = '';
+
+  actions.forEach(action => {
     const btn = document.createElement('button');
-    btn.textContent = a.text;
+    btn.textContent = action.text;
     btn.onclick = () => {
-      document.getElementById('modal').classList.add('hidden');
-      if (a.onClick) a.onClick();
+      modalEl.classList.add('hidden');
+      if (typeof action.onClick === 'function') action.onClick();
     };
-    area.appendChild(btn);
+    modalActions.appendChild(btn);
   });
 
-  document.getElementById('modal').classList.remove('hidden');
-}
-
-function renderHeader() {
-  document.getElementById('diamondCount').textContent = state.diamond;
+  modalEl.classList.remove('hidden');
 }
 
 function renderMain() {
-  document.getElementById('nameBtn').textContent = state.name;
+  const nameBtn = document.getElementById('nameBtn');
+  if (nameBtn) nameBtn.textContent = state.name;
+
   renderShelf();
   renderHeader();
 }
 
 function renderShelf() {
   const grid = document.getElementById('shelfGrid');
+  if (!grid) return;
+
   grid.innerHTML = '';
 
-  state.shelf.forEach((card, index) => {
+  state.shelf.forEach((cardName, index) => {
     const div = document.createElement('div');
-    div.className = card ? 'miniCard' : 'slot empty';
-    div.innerHTML = card ? `<div>✨</div><div>${card}</div><div>COLLECT</div>` : 'タップで飾る';
-    div.onclick = () => chooseShelf(index);
+    div.className = cardName ? 'miniCard' : 'slot empty';
+
+    if (cardName) {
+      div.innerHTML = `
+        <div>✨</div>
+        <div>${escapeHtml(cardName)}</div>
+        <div>SHELF</div>
+      `;
+    } else {
+      div.textContent = 'タップで飾る';
+    }
+
+    div.onclick = () => chooseShelfCard(index);
     grid.appendChild(div);
   });
 }
 
-function chooseShelf(index) {
-  if (!state.collection.length) {
-    modal('まだガチャカードを持っていません。', [{ text: 'OK' }]);
+function chooseShelfCard(index) {
+  const owned = uniqueCollection();
+
+  if (owned.length <= 0) {
+    modal('まだガチャカードを持っていません。', [
+      { text: 'OK' }
+    ]);
     return;
   }
 
-  const actions = state.collection.map(card => ({
-    text: card,
+  const actions = owned.map(cardName => ({
+    text: cardName,
     onClick: () => {
-      state.shelf[index] = card;
+      state.shelf[index] = cardName;
       save();
       renderShelf();
     }
@@ -156,11 +260,17 @@ function chooseShelf(index) {
     }
   });
 
-  modal('飾るカードを選んでください', actions);
+  modal('飾るカードを選んでください。', actions);
+}
+
+function uniqueCollection() {
+  return Array.from(new Set(state.collection));
 }
 
 function renderPractice() {
   const list = document.getElementById('practiceList');
+  if (!list) return;
+
   list.innerHTML = '';
 
   PRACTICE_CARDS.forEach(([name, points], i) => {
@@ -170,10 +280,10 @@ function renderPractice() {
     const div = document.createElement('div');
     div.className = 'practiceCard';
     div.innerHTML = `
-      <div class="cardTitle">${name}</div>
-      <div class="points">${points.map(p => '・' + p).join('<br>')}</div>
-      <div class="stamp">🐾 × ${data.count} ${data.lastDate ? `<br>最後：${data.lastDate}` : ''}</div>
-      <button>スタンプを押す</button>
+      <div class="cardTitle">${escapeHtml(name)}</div>
+      <div class="points">${points.map(p => '・' + escapeHtml(p)).join('<br>')}</div>
+      <div class="stamp">🐾 × ${data.count}${data.lastDate ? `<br>最後：${escapeHtml(data.lastDate)}` : ''}</div>
+      <button type="button">スタンプを押す</button>
     `;
 
     div.querySelector('button').onclick = () => stampPractice(id);
@@ -182,11 +292,13 @@ function renderPractice() {
 }
 
 function stampPractice(id) {
-  const d = state.practice[id] || { count: 0, lastDate: '' };
+  const data = state.practice[id] || { count: 0, lastDate: '' };
   const now = today();
 
-  if (d.lastDate === now) {
-    modal('このカードは今日はもうスタンプ済みです。', [{ text: 'OK' }]);
+  if (data.lastDate === now) {
+    modal('このカードは今日はもうスタンプ済みです。', [
+      { text: 'OK' }
+    ]);
     return;
   }
 
@@ -194,46 +306,78 @@ function stampPractice(id) {
     {
       text: 'はい',
       onClick: () => {
-        d.count++;
-        d.lastDate = now;
-        state.practice[id] = d;
+        data.count += 1;
+        data.lastDate = now;
+        state.practice[id] = data;
         save();
         renderPractice();
+        modal('肉球スタンプを押しました！\n🐾 +1', [
+          { text: 'OK' }
+        ]);
       }
     },
-    { text: 'いいえ' }
+    {
+      text: 'いいえ'
+    }
   ]);
 }
 
 function renderMission() {
   const list = document.getElementById('missionList');
+  if (!list) return;
+
   list.innerHTML = '';
+
+  let count = 0;
 
   MISSION_CARDS.forEach(card => {
     if (state.cleared[card.id]) return;
 
+    count += 1;
+
     const div = document.createElement('div');
     div.className = 'missionCard';
     div.innerHTML = `
-      <div class="cardTitle">${card.name}</div>
-      <div class="points">クリア報酬：💎${card.diamond}</div>
-      <button>クリア</button>
+      <div class="cardTitle">${escapeHtml(card.name)}</div>
+      <div class="points">課題をクリアしたら先生に確認してもらおう。</div>
+      <div class="stamp">報酬：💎${card.diamond}</div>
+      <button type="button">クリア</button>
     `;
 
     div.querySelector('button').onclick = () => clearMission(card);
     list.appendChild(div);
   });
+
+  if (count === 0) {
+    const div = document.createElement('div');
+    div.className = 'missionCard';
+    div.innerHTML = `
+      <div class="cardTitle">全課題クリア済み</div>
+      <div class="points">クリアファイルからいつでも確認できます。</div>
+    `;
+    list.appendChild(div);
+  }
 }
 
 function clearMission(card) {
   const pass = prompt('クリアパスワードを入力してください');
 
-  if (pass !== '0321') {
-    modal('パスワードが違います。', [{ text: 'OK' }]);
+  if (pass !== ADMIN_PASS) {
+    modal('パスワードが違います。', [
+      { text: 'OK' }
+    ]);
+    return;
+  }
+
+  if (state.cleared[card.id]) {
+    modal('この課題はすでにクリア済みです。', [
+      { text: 'OK' }
+    ]);
     return;
   }
 
   state.cleared[card.id] = {
+    id: card.id,
     name: card.name,
     diamond: card.diamond,
     date: today()
@@ -243,67 +387,221 @@ function clearMission(card) {
   save();
   renderMission();
 
-  modal(`${card.name} クリア！\n💎${card.diamond} 獲得！`, [{ text: 'OK' }]);
+  modal(`${card.name} クリア！\n💎${card.diamond} 獲得！\nクリアファイルに移動しました。`, [
+    { text: 'OK' }
+  ]);
 }
 
 function renderPhone() {
   const clearCount = Object.keys(state.cleared).length;
-  const stampScore = Object.values(state.practice).reduce((sum, p) => sum + p.count, 0);
+  const stampScore = Object.values(state.practice).reduce((sum, p) => {
+    if (!p || typeof p.count !== 'number') return sum;
+    return sum + p.count;
+  }, 0);
+
   const score = stampScore * 10 + clearCount * 100;
 
-  document.getElementById('phoneName').textContent = state.name;
-  document.getElementById('phoneScore').textContent = score;
-  document.getElementById('phoneClear').textContent = clearCount;
-  document.getElementById('phoneCollection').textContent = state.collection.length;
-  document.getElementById('phoneDiamond').textContent = state.diamond;
+  setText('phoneName', state.name);
+  setText('phoneScore', score);
+  setText('phoneClear', clearCount);
+  setText('phoneCollection', uniqueCollection().length);
+  setText('phoneDiamond', state.diamond);
 }
 
 function renderFile() {
   const grid = document.getElementById('fileGrid');
+  if (!grid) return;
+
   const cleared = Object.values(state.cleared);
   const totalPages = Math.max(1, Math.ceil(cleared.length / 9));
 
+  if (filePage < 0) filePage = 0;
   if (filePage >= totalPages) filePage = totalPages - 1;
 
+  const items = cleared.slice(filePage * 9, filePage * 9 + 9);
+
   grid.innerHTML = '';
-  const pageItems = cleared.slice(filePage * 9, filePage * 9 + 9);
 
   for (let i = 0; i < 9; i++) {
-    const card = pageItems[i];
+    const card = items[i];
     const div = document.createElement('div');
-    div.className = card ? 'miniCard' : 'slot empty';
-    div.innerHTML = card
-      ? `<div>✅</div><div>${card.name}</div><div>${card.date}</div>`
-      : '空き';
+
+    if (card) {
+      div.className = 'miniCard';
+      div.innerHTML = `
+        <div>✅ CLEAR</div>
+        <div>${escapeHtml(card.name)}</div>
+        <div>${escapeHtml(card.date)}</div>
+      `;
+    } else {
+      div.className = 'slot empty';
+      div.textContent = '空き';
+    }
+
     grid.appendChild(div);
   }
 
-  document.getElementById('pageInfo').textContent = `${filePage + 1} / ${totalPages}`;
+  setText('pageInfo', `${filePage + 1} / ${totalPages}`);
 }
 
 function renderGacha() {
-  document.getElementById('gachaResult').innerHTML = '';
+  const result = document.getElementById('gachaResult');
+  if (result) result.innerHTML = '';
 }
 
 function drawGacha() {
-  if (state.diamond < 5) {
-    modal('ダイヤが足りません。', [{ text: 'OK' }]);
+  const cost = 5;
+
+  if (state.diamond < cost) {
+    modal('ダイヤが足りません。', [
+      { text: 'OK' }
+    ]);
     return;
   }
 
-  state.diamond -= 5;
+  state.diamond -= cost;
 
-  const card = GACHA_CARDS[Math.floor(Math.random() * GACHA_CARDS.length)];
-  state.collection.push(card);
+  const cardName = GACHA_CARDS[Math.floor(Math.random() * GACHA_CARDS.length)];
+  state.collection.push(cardName);
+
   save();
 
-  document.getElementById('gachaResult').innerHTML = `
-    <div class="miniCard" style="margin:0 auto;width:130px;">
-      <div>✨GET✨</div>
-      <div>${card}</div>
-      <div>COLLECTION</div>
-    </div>
-  `;
+  const result = document.getElementById('gachaResult');
+  if (result) {
+    result.innerHTML = `
+      <div class="miniCard" style="width:140px;margin:0 auto;">
+        <div>✨ GET ✨</div>
+        <div>${escapeHtml(cardName)}</div>
+        <div>COLLECTION</div>
+      </div>
+    `;
+  }
+}
+
+function enterAdmin() {
+  const pass = prompt('管理者パスワードを入力してください');
+
+  if (pass !== ADMIN_PASS) {
+    modal('パスワードが違います。', [
+      { text: 'OK' }
+    ]);
+    return;
+  }
+
+  show('admin');
+}
+
+function renderAdmin() {
+  const select = document.getElementById('adminClearSelect');
+  if (!select) return;
+
+  select.innerHTML = '';
+
+  const cleared = Object.values(state.cleared);
+
+  if (cleared.length <= 0) {
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = 'クリア済みカードなし';
+    select.appendChild(option);
+    return;
+  }
+
+  cleared.forEach(card => {
+    const option = document.createElement('option');
+    option.value = card.id;
+    option.textContent = `${card.name} / ${card.date}`;
+    select.appendChild(option);
+  });
+}
+
+function adminChangeDiamond() {
+  const input = document.getElementById('adminDiamondInput');
+  if (!input) return;
+
+  const value = Number(input.value);
+
+  if (!Number.isFinite(value) || value === 0) {
+    modal('増減する数字を入力してください。\n例：10 または -10', [
+      { text: 'OK' }
+    ]);
+    return;
+  }
+
+  state.diamond += value;
+  if (state.diamond < 0) state.diamond = 0;
+
+  input.value = '';
+  save();
+  renderAdmin();
+
+  modal(`ダイヤを変更しました。\n現在：💎${state.diamond}`, [
+    { text: 'OK' }
+  ]);
+}
+
+function adminUnlockClear() {
+  const select = document.getElementById('adminClearSelect');
+  if (!select || !select.value) {
+    modal('解除できるクリア済みカードがありません。', [
+      { text: 'OK' }
+    ]);
+    return;
+  }
+
+  const id = select.value;
+  const card = state.cleared[id];
+
+  if (!card) {
+    modal('対象カードが見つかりません。', [
+      { text: 'OK' }
+    ]);
+    return;
+  }
+
+  delete state.cleared[id];
+  save();
+  renderAdmin();
+  renderMission();
+  renderFile();
+
+  modal(`${card.name} のクリアを解除しました。`, [
+    { text: 'OK' }
+  ]);
+}
+
+function adminDeleteSave() {
+  modal('本当に全セーブを削除しますか？\n名前・ダイヤ・スタンプ・クリア状況・ガチャカードが全て消えます。', [
+    {
+      text: '削除する',
+      onClick: () => {
+        resetSave();
+        modal('セーブを削除しました。', [
+          { text: 'OK' }
+        ]);
+      }
+    },
+    {
+      text: 'やめる'
+    }
+  ]);
+}
+
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, ch => {
+    return {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[ch];
+  });
 }
 
 document.querySelectorAll('[data-open]').forEach(btn => {
@@ -311,14 +609,12 @@ document.querySelectorAll('[data-open]').forEach(btn => {
 });
 
 document.querySelectorAll('.backBtn').forEach(btn => {
-  btn.onclick = () => {
-    renderMain();
-    show('main');
-  };
+  btn.onclick = () => show('main');
 });
 
 document.getElementById('nameBtn').onclick = () => {
   const name = prompt('名前を入力してください', state.name);
+
   if (name && name.trim()) {
     state.name = name.trim();
     save();
@@ -326,17 +622,21 @@ document.getElementById('nameBtn').onclick = () => {
   }
 };
 
-document.getElementById('gachaBtn').onclick = drawGacha;
+document.getElementById('drawGachaBtn').onclick = drawGacha;
+document.getElementById('adminEnterBtn').onclick = enterAdmin;
+document.getElementById('adminDiamondBtn').onclick = adminChangeDiamond;
+document.getElementById('adminUnlockBtn').onclick = adminUnlockClear;
+document.getElementById('adminDeleteSaveBtn').onclick = adminDeleteSave;
 
 document.getElementById('prevPage').onclick = () => {
-  filePage = Math.max(0, filePage - 1);
+  filePage -= 1;
   renderFile();
 };
 
 document.getElementById('nextPage').onclick = () => {
-  const total = Math.max(1, Math.ceil(Object.keys(state.cleared).length / 9));
-  filePage = Math.min(total - 1, filePage + 1);
+  filePage += 1;
   renderFile();
 };
 
-renderMain();
+renderAll();
+show('main');
