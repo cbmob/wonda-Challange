@@ -7,39 +7,76 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="bgEffects">
+    <span></span><span></span><span></span><span></span>
+  </div>
+
   <div id="app">
     <header class="top">
-      <h1>ワンダと時の部屋</h1>
-      <div class="diamonds">💎 <span id="diamondCount">0</span></div>
+      <div>
+        <div class="subTitle">PRACTICE CARD BATTLE</div>
+        <h1>ワンダと時の部屋</h1>
+      </div>
+      <div class="diamondBadge">💎 <span id="diamondCount">0</span></div>
     </header>
 
     <main id="mainScreen" class="screen active">
-      <section class="profile card float">
+      <section class="heroPanel">
         <div id="avatar" class="avatar">🐾</div>
-        <div>
-          <div class="label">名前</div>
+        <div class="playerInfo">
+          <div class="infoLabel">PLAYER NAME</div>
           <button id="nameBtn" class="nameBtn">なまえ未設定</button>
         </div>
       </section>
 
-      <section class="shelf card">
-        <h2>コレクション棚</h2>
-        <div id="shelfGrid" class="grid9"></div>
+      <section class="shelfPanel">
+        <div class="sectionTitle">COLLECTION SHELF</div>
+        <div id="shelfGrid" class="shelfGrid"></div>
       </section>
 
-      <section class="menuGrid">
-        <button class="menuBtn float" data-open="practice">練習カードデッキ</button>
-        <button class="menuBtn float" data-open="mission">課題カードデッキ</button>
-        <button class="menuBtn float" data-open="phone">スマホ</button>
-        <button class="menuBtn float" data-open="file">クリアファイル</button>
-        <button class="menuBtn float" data-open="gacha">コレクションガチャ</button>
+      <section class="mainMenu">
+        <button class="worldBtn deckBtn" data-open="practice">
+          <span class="icon">🃏</span>
+          <span>練習カードデッキ</span>
+          <small>PRACTICE DECK</small>
+        </button>
+
+        <button class="worldBtn missionBtn" data-open="mission">
+          <span class="icon">🔥</span>
+          <span>課題カードデッキ</span>
+          <small>MISSION DECK</small>
+        </button>
+
+        <button class="worldBtn phoneBtn" data-open="phone">
+          <span class="icon">📱</span>
+          <span>スマホ</span>
+          <small>STATUS PHONE</small>
+        </button>
+
+        <button class="worldBtn fileBtn" data-open="file">
+          <span class="icon">📂</span>
+          <span>クリアファイル</span>
+          <small>CLEAR FILE</small>
+        </button>
+
+        <button class="worldBtn gachaBtn" data-open="gacha">
+          <span class="icon">✨</span>
+          <span>カードガチャ</span>
+          <small>COLLECTION GACHA</small>
+        </button>
+
+        <button id="adminEnterBtn" class="worldBtn adminBtn">
+          <span class="icon">⚙️</span>
+          <span>管理者として実行</span>
+          <small>ADMIN MODE</small>
+        </button>
       </section>
     </main>
 
     <main id="practiceScreen" class="screen">
       <div class="pageHead">
         <button class="backBtn">← 戻る</button>
-        <h2>練習カード</h2>
+        <h2>練習カードデッキ</h2>
       </div>
       <div id="practiceList" class="cardList"></div>
     </main>
@@ -47,7 +84,7 @@
     <main id="missionScreen" class="screen">
       <div class="pageHead">
         <button class="backBtn">← 戻る</button>
-        <h2>課題カード</h2>
+        <h2>課題カードデッキ</h2>
       </div>
       <div id="missionList" class="cardList"></div>
     </main>
@@ -57,12 +94,17 @@
         <button class="backBtn">← 戻る</button>
         <h2>スマホ</h2>
       </div>
-      <section class="card phoneBox">
-        <p>名前：<b id="phoneName"></b></p>
-        <p>現在のスコア：<b id="phoneScore"></b></p>
-        <p>達成カード数：<b id="phoneClear"></b></p>
-        <p>所持ガチャカード数：<b id="phoneCollection"></b></p>
-        <p>所持ダイヤ：<b id="phoneDiamond"></b></p>
+
+      <section class="phoneFrame">
+        <div class="phoneTop"></div>
+        <div class="phoneScreenInner">
+          <h3>PLAYER STATUS</h3>
+          <p>名前：<b id="phoneName"></b></p>
+          <p>現在のスコア：<b id="phoneScore"></b></p>
+          <p>達成カード数：<b id="phoneClear"></b></p>
+          <p>所持ガチャカード数：<b id="phoneCollection"></b></p>
+          <p>所持ダイヤ：<b id="phoneDiamond"></b></p>
+        </div>
       </section>
     </main>
 
@@ -71,7 +113,11 @@
         <button class="backBtn">← 戻る</button>
         <h2>クリア済みファイル</h2>
       </div>
-      <div id="fileGrid" class="grid9"></div>
+
+      <section class="binder">
+        <div id="fileGrid" class="fileGrid"></div>
+      </section>
+
       <div class="pager">
         <button id="prevPage">前へ</button>
         <span id="pageInfo">1 / 1</span>
@@ -82,12 +128,43 @@
     <main id="gachaScreen" class="screen">
       <div class="pageHead">
         <button class="backBtn">← 戻る</button>
-        <h2>コレクションガチャ</h2>
+        <h2>コレクションカードガチャ</h2>
       </div>
-      <section class="card gachaBox float">
+
+      <section class="gachaMachine">
+        <div class="gachaAura"></div>
+        <div class="gachaCore">CARD<br>GACHA</div>
         <p>1回 💎5</p>
-        <button id="gachaBtn" class="bigBtn">ガチャを引く</button>
+        <button id="drawGachaBtn" class="bigBtn">ガチャを引く</button>
         <div id="gachaResult"></div>
+      </section>
+    </main>
+
+    <main id="adminScreen" class="screen">
+      <div class="pageHead">
+        <button class="backBtn">← 戻る</button>
+        <h2>管理者モード</h2>
+      </div>
+
+      <section class="adminPanel">
+        <h3>ADMIN CONTROL</h3>
+
+        <div class="adminBlock">
+          <label>ダイヤ増減</label>
+          <input id="adminDiamondInput" type="number" placeholder="例：10 / -10" />
+          <button id="adminDiamondBtn">反映</button>
+        </div>
+
+        <div class="adminBlock">
+          <label>クリア済み解除</label>
+          <select id="adminClearSelect"></select>
+          <button id="adminUnlockBtn">解除する</button>
+        </div>
+
+        <div class="adminBlock danger">
+          <label>セーブ削除</label>
+          <button id="adminDeleteSaveBtn">全セーブ削除</button>
+        </div>
       </section>
     </main>
   </div>
